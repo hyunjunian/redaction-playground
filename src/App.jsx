@@ -255,6 +255,7 @@ function App() {
                         id,
                         texts: [{ text: "" }],
                         qa: [],
+                        answers: {},
                       }]);
                       setCurrentItemId(id);
                       return;
@@ -275,6 +276,7 @@ function App() {
                       id,
                       texts: [{ text: "" }],
                       qa: [],
+                      answers: {},
                     }]);
                     setCurrentItemId(id);
                   }}>
