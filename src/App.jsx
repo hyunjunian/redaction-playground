@@ -73,7 +73,7 @@ function App() {
   const [threshold, setThreshold] = useState(defaultThreshold);
   const selectedIndex = data.findIndex((item) => item.id === currentItemId);
   const currentItem = data[selectedIndex];
-  const [currentRedactedTextId, setCurrentRedactedTextId] = useState();
+  const [currentRedactedTextId, setCurrentRedactedTextId] = useState(data[0].texts[1]?.id);
   const selectedRedactedTextIndex = currentRedactedTextId ? currentItem.texts.findIndex(text => text.id === currentRedactedTextId) : -1;
 
   useEffect(() => {
@@ -493,7 +493,6 @@ function App() {
                   onChange={(checked) => {
                     setData((prev) => prev.map((item) => {
                       if (item.id !== currentItemId) return item;
-                      Object.keys(item.answers).forEach((key) => delete item.answers[key][id]);
                       return { ...item, qa: item.qa.map((q) => q.id === id ? { ...q, redact: checked } : q) };
                     }));
                   }}
