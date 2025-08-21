@@ -88,6 +88,7 @@ function App() {
         <Button className="rounded-lg focus:not-data-focus:outline-none data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-neutral-500 bg-neutral-900 px-4 py-2 hover:bg-neutral-800 flex items-center space-x-2" onClick={() => {
           const newApiKey = prompt("Please enter your new OpenAI API key:", apiKey);
           if (newApiKey) localStorage.setItem("apiKey", newApiKey);
+          else if (newApiKey === null) return;
           else localStorage.removeItem("apiKey");
           dispatchEvent(new Event("storage"));
         }}>
