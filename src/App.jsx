@@ -1,7 +1,7 @@
 import { Button, Checkbox, Input, Listbox, ListboxButton, ListboxOption, ListboxOptions, Menu, MenuButton, MenuItem, MenuItems, Popover, PopoverButton, PopoverPanel, Tab, TabGroup, TabList, TabPanel, TabPanels, Textarea } from "@headlessui/react";
 import useLocalStorage from "./useLocalStorage";
 import { useEffect, useState } from "react";
-import { getAnswer, getEquality, getOriginalText, getQA } from "./utils";
+import { downloadFile, getAnswer, getEquality, getOriginalText, getQA } from "./utils";
 
 const models = ["gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano", "gpt-5", "gpt-5-mini", "gpt-5-nano"];
 const defaultData = [{
@@ -45,7 +45,7 @@ const defaultThreshold = 0.8;
 function App() {
   const apiKey = useLocalStorage("apiKey");
   const model = useLocalStorage("model", models[0]);
-  const [data, setData] = useState(defaultData);
+  const [data, setData] = useState(localStorage.getItem("data") ? JSON.parse(localStorage.getItem("data")) : defaultData);
   const [currentItemId, setCurrentItemId] = useState(data[0].id);
   const [threshold, setThreshold] = useState(defaultThreshold);
   const selectedIndex = data.findIndex((item) => item.id === currentItemId);
@@ -53,7 +53,9 @@ function App() {
   const [currentRedactedTextId, setCurrentRedactedTextId] = useState();
   const selectedRedactedTextIndex = currentRedactedTextId ? currentItem.texts.findIndex(text => text.id === currentRedactedTextId) : -1;
 
-  useEffect(() => console.log(data), [data]);
+  useEffect(() => {
+    localStorage.setItem("data", JSON.stringify(data));
+  }, [data]);
 
   return (
     <main className="grid grid-cols-3 gap-px bg-neutral-800 border-b border-neutral-800">
@@ -194,15 +196,7 @@ function App() {
                       reader.onload = (event) => {
                         const content = event.target.result;
                         const lines = content.split("\n").filter(line => line.trim());
-                        const newTexts = lines.map((line) => {
-                          try {
-                            const data = JSON.parse(line);
-                            return { id: crypto.randomUUID(), text: data.text || "", context: data.context || "" };
-                          } catch (error) {
-                            console.error("Invalid JSON line:", line);
-                            return { id: crypto.randomUUID(), text: "", context: "" };
-                          }
-                        });
+                        const newTexts = lines.map((line) => JSON.parse(line));
                         setData((prev) => [...prev, ...newTexts]);
                       };
                       reader.readAsText(file);
@@ -269,7 +263,7 @@ function App() {
                 </MenuItem>
               </MenuItems>
             </Menu>
-            <Button className="w-8 flex justify-center items-center text-neutral-500 focus:not-data-focus:outline-none data-focus:outline data-focus:outline-neutral-500 data-focus:text-neutral-200 data-active:text-neutral-200 data-hover:text-neutral-200" onClick={() => setIsOpen(true)}>
+            <Button className="w-8 flex justify-center items-center text-neutral-500 focus:not-data-focus:outline-none data-focus:outline data-focus:outline-neutral-500 data-focus:text-neutral-200 data-active:text-neutral-200 data-hover:text-neutral-200" onClick={() => downloadFile("data.jsonl", data.map(item => JSON.stringify(item)).join("\n"))}>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
                 <path d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z" />
                 <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" />
