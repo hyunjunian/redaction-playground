@@ -42,6 +42,29 @@ One CID official, who like some others spoke on the condition of anonymity citin
 }]
 const defaultThreshold = 0.8;
 
+function getScore(item, redactedTextId, threshold = defaultThreshold) {
+  let falsePositiveCount = 0;
+  let falseNegativeCount = 0;
+  let shouldRedactCount = 0;
+  let shouldNotRedactCount = 0;
+
+  item.qa.forEach(({ id, redact }) => {
+    if (redact) shouldRedactCount++;
+    else shouldNotRedactCount++;
+    const score = item.answers[redactedTextId]?.[id]?.score;
+    if (score === undefined) return;
+    const correct = score >= threshold;
+    if (correct && redact) {
+      falseNegativeCount++;
+    } else if (!correct && !redact) {
+      falsePositiveCount++;
+    }
+  });
+  const falsePositiveCountRatio = shouldNotRedactCount > 0 ? falsePositiveCount / shouldNotRedactCount : 0;
+  const falseNegativeCountRatio = shouldRedactCount > 0 ? falseNegativeCount / shouldRedactCount : 0;
+  return falsePositiveCountRatio + falseNegativeCountRatio;
+}
+
 function App() {
   const apiKey = useLocalStorage("apiKey");
   const model = useLocalStorage("model", models[0]);
@@ -665,7 +688,7 @@ function App() {
       </div>
       <div className="bg-black divide-y divide-neutral-800">
         <div className="text-neutral-500 flex divide-x divide-neutral-800">
-          <p className="p-2 flex-1">Answer</p>
+          <p className="p-2 flex-1">Answer (Score: {getScore(currentItem, currentRedactedTextId, threshold).toFixed(2)})</p>
           <Popover className="flex items-center justify-center w-8 shrink-0">
             <PopoverButton className="outline-none hover:text-neutral-200">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
