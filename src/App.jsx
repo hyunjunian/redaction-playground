@@ -1,7 +1,7 @@
 import { Button, Checkbox, Input, Listbox, ListboxButton, ListboxOption, ListboxOptions, Menu, MenuButton, MenuItem, MenuItems, Popover, PopoverButton, PopoverPanel, Tab, TabGroup, TabList, TabPanel, TabPanels, Textarea } from "@headlessui/react";
 import useLocalStorage from "./useLocalStorage";
 import { useEffect, useState } from "react";
-import { downloadFile, getAnswer, getEquality, getOriginalText, getQA } from "./utils";
+import { downloadFile, getAnswer, getEquality, getOriginalText, getQA, getRedactedText } from "./utils";
 
 const models = ["gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano", "gpt-5", "gpt-5-mini", "gpt-5-nano"];
 const defaultData = [{
@@ -38,6 +38,7 @@ One CID official, who like some others spoke on the condition of anonymity citin
 “I’ve never seen this many security teams for one guy,” the official said. “Nobody has.”`,
     },
   ],
+  policy: "",
   answers: {},
 }]
 const defaultThreshold = 0.8;
@@ -45,24 +46,22 @@ const defaultThreshold = 0.8;
 function getScore(item, redactedTextId, threshold = defaultThreshold) {
   let falsePositiveCount = 0;
   let falseNegativeCount = 0;
-  let shouldRedactCount = 0;
-  let shouldNotRedactCount = 0;
+  let truePositiveCount = 0;
+  let trueNegativeCount = 0;
 
   item.qa.forEach(({ id, redact }) => {
-    if (redact) shouldRedactCount++;
-    else shouldNotRedactCount++;
     const score = item.answers[redactedTextId]?.[id]?.score;
     if (score === undefined) return;
     const correct = score >= threshold;
-    if (correct && redact) {
-      falseNegativeCount++;
-    } else if (!correct && !redact) {
-      falsePositiveCount++;
-    }
+    if (!redact && correct) truePositiveCount += 1;
+    else if (!redact && !correct) falseNegativeCount += 1;
+    else if (redact && correct) falsePositiveCount += 1;
+    else if (redact && !correct) trueNegativeCount += 1;
   });
-  const falsePositiveCountRatio = shouldNotRedactCount > 0 ? falsePositiveCount / shouldNotRedactCount : 0;
-  const falseNegativeCountRatio = shouldRedactCount > 0 ? falseNegativeCount / shouldRedactCount : 0;
-  return falsePositiveCountRatio + falseNegativeCountRatio;
+  console.log(truePositiveCount, falsePositiveCount, falseNegativeCount, trueNegativeCount);
+  const precision = truePositiveCount + falsePositiveCount === 0 ? 1 : truePositiveCount / (truePositiveCount + falsePositiveCount);
+  const recall = truePositiveCount + falseNegativeCount === 0 ? 1 : truePositiveCount / (truePositiveCount + falseNegativeCount);
+  return precision + recall === 0 ? 0 : (2 * precision * recall) / (precision + recall);
 }
 
 function App() {
@@ -134,11 +133,11 @@ function App() {
         <h2 className="text-neutral-500 p-2">Original Texts</h2>
         <TabGroup className="text-sm divide-y divide-neutral-800" selectedIndex={selectedIndex}>
           <TabPanels>
-            {data.map(({ id, texts }) => (
+            {data.map(({ id, texts, policy }) => (
               <TabPanel key={id}>
                 <Textarea
                   className="block w-full resize-none p-2 focus:not-data-focus:outline-none data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-white/25"
-                  rows={16}
+                  rows={12}
                   placeholder="Type original text..."
                   value={texts[0].text}
                   onChange={(e) => {
@@ -147,6 +146,17 @@ function App() {
                     ));
                   }}
                   required
+                />
+                <Textarea
+                  className="block w-full resize-none p-2 focus:not-data-focus:outline-none data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-white/25"
+                  rows={4}
+                  placeholder="Type policy..."
+                  value={policy}
+                  onChange={(e) => {
+                    setData((prev) => prev.map((item) =>
+                      item.id === id ? { ...item, policy: e.target.value } : item
+                    ));
+                  }}
                 />
               </TabPanel>
             ))}
@@ -182,7 +192,7 @@ function App() {
                     const id = crypto.randomUUID();
                     setData((prev) => [
                       ...prev,
-                      { id, texts: [{ id: crypto.randomUUID(), text: "" }], qa: [], answers: {} },
+                      { id, texts: [{ id: crypto.randomUUID(), text: "" }], policy: "", qa: [], answers: {} },
                     ]);
                     setCurrentItemId(id);
                   }}>
@@ -198,7 +208,7 @@ function App() {
                     const id = crypto.randomUUID();
                     setData((prev) => [
                       ...prev,
-                      { id, texts: [{ id: crypto.randomUUID(), text: originalText }], qa: [], answers: {} },
+                      { id, texts: [{ id: crypto.randomUUID(), text: originalText }], policy: "", qa: [], answers: {} },
                     ]);
                     setCurrentItemId(id);
                   }}>
@@ -254,6 +264,7 @@ function App() {
                       setData([{
                         id,
                         texts: [{ text: "" }],
+                        policy: "",
                         qa: [],
                         answers: {},
                       }]);
@@ -276,6 +287,7 @@ function App() {
                       id,
                       texts: [{ text: "" }],
                       qa: [],
+                      policy: "",
                       answers: {},
                     }]);
                     setCurrentItemId(id);
@@ -366,6 +378,21 @@ function App() {
                 </MenuItem>
                 <MenuItem>
                   <Button className="group flex w-full items-center gap-2 rounded-lg px-3 py-1.5 data-focus:bg-white/10" onClick={() => {
+                    if (!apiKey) {
+                      alert("Please set your OpenAI API key first.");
+                      return;
+                    }
+                    getRedactedText(apiKey, model, currentItem.texts[0].text, currentItem.policy).then((redactedText) => {
+                      const id = crypto.randomUUID();
+                      setData((prev) => prev.map((item) => {
+                        if (item.id !== currentItemId) return item;
+                        return {
+                          ...item,
+                          texts: [...item.texts, { id, text: redactedText }],
+                        };
+                      }));
+                      setCurrentRedactedTextId(id);
+                    });
                   }}>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
                       <path d="M15.98 1.804a1 1 0 0 0-1.96 0l-.24 1.192a1 1 0 0 1-.784.785l-1.192.238a1 1 0 0 0 0 1.962l1.192.238a1 1 0 0 1 .785.785l.238 1.192a1 1 0 0 0 1.962 0l.238-1.192a1 1 0 0 1 .785-.785l1.192-.238a1 1 0 0 0 0-1.962l-1.192-.238a1 1 0 0 1-.785-.785l-.238-1.192ZM6.949 5.684a1 1 0 0 0-1.898 0l-.683 2.051a1 1 0 0 1-.633.633l-2.051.683a1 1 0 0 0 0 1.898l2.051.684a1 1 0 0 1 .633.632l.683 2.051a1 1 0 0 0 1.898 0l.683-2.051a1 1 0 0 1 .633-.633l2.051-.683a1 1 0 0 0 0-1.898l-2.051-.683a1 1 0 0 1-.633-.633L6.95 5.684ZM13.949 13.684a1 1 0 0 0-1.898 0l-.184.551a1 1 0 0 1-.632.633l-.551.183a1 1 0 0 0 0 1.898l.551.183a1 1 0 0 1 .633.633l.183.551a1 1 0 0 0 1.898 0l.184-.551a1 1 0 0 1 .632-.633l.551-.183a1 1 0 0 0 0-1.898l-.551-.184a1 1 0 0 1-.633-.632l-.183-.551Z" />

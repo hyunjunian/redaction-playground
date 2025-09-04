@@ -9,7 +9,7 @@ function downloadFile(filename, content) {
     URL.revokeObjectURL(link.href);
 }
 
-async function getResponse({ apiKey, model, input, instruction = "", text, max_output_tokens = 4096 }) {
+async function getResponse({ apiKey, model, input, instruction = "", text, max_output_tokens = 9096 }) {
     if (!apiKey) return console.error("API key is required.");
     if (!model) return console.error("Model is required.");
     if (!input) return console.error("Input is required.");
@@ -186,4 +186,35 @@ async function getAnswer(apiKey, model, context, question) {
     return JSON.parse(res).answer;
 }
 
-export { downloadFile, getResponse, getOriginalText, getQA, getEquality, getAnswer };
+async function getRedactedText(apiKey, model, text, policy) {
+    const res = await getResponse({
+        apiKey,
+        model,
+        input: text,
+        instruction: `You are a professional text redactor. Redact the text provided by user according to the given policy.\n\n**[Policy]**\n${policy}`,
+        text: {
+            format: {
+                type: "json_schema",
+                name: "structured_outputs",
+                schema: {
+                    type: "object",
+                    properties: {
+                        reasoning: {
+                            type: "string",
+                            description: "Your reasoning for the redaction.",
+                        },
+                        redacted_text: {
+                            type: "string",
+                            description: "The redacted version of the text.",
+                        },
+                    },
+                    required: ["reasoning", "redacted_text"],
+                    additionalProperties: false,
+                },
+            },
+        },
+    });
+    return JSON.parse(res).redacted_text;
+}
+
+export { downloadFile, getResponse, getOriginalText, getQA, getEquality, getAnswer, getRedactedText };
