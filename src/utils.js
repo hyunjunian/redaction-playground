@@ -159,7 +159,7 @@ async function getAnswer(apiKey, model, context, question) {
     const res = await getResponse({
         apiKey,
         model,
-        input: question,
+        input: `${question} (**Answer Length:** Keep answers concise and to the point, ideally within 1-5 words.)`,
         instruction: context,
         text: {
             format: {
