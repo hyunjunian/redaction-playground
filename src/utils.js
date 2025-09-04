@@ -84,6 +84,7 @@ Read the text provided below and generate a list of questions and answers (Q&A) 
 1.  **Comprehensiveness:** Do not miss even minor details—turn everything into questions, including the text’s key concepts, key figures, events, dates, statistics, reasons, and outcomes.
 2.  **Accuracy:** All answers must be based solely on information in the given text. Never use external knowledge or make guesses.
 3.  **Format:** Organize it in the JSON format.
+4.  **Answer Length:** Keep answers concise and to the point, ideally within 1-5 words.
 
 Now, please start working with the text below.`,
         text: {
