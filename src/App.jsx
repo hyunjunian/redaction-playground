@@ -29,6 +29,7 @@ const defaultData = [{
   texts: [
     {
       id: "a",
+      label: "original",
       text: `Defense Secretary Pete Hegseth’s unusually large personal security requirements are straining the Army agency tasked with protecting him as it pulls agents from criminal investigations to safeguard family residences in Minnesota, Tennessee and D.C., according to numerous officials familiar with the operation.
 
 The sprawling, multimillion-dollar initiative has forced the Army’s Criminal Investigation Division, or CID, the agency that fields security for top Defense Department officials, to staff weeks-long assignments in each location and at times monitor residences belonging to the Hegseths’ former spouses, the officials said.
@@ -134,7 +135,7 @@ function App() {
         <TabGroup className="text-sm divide-y divide-neutral-800" selectedIndex={selectedIndex}>
           <TabPanels>
             {data.map(({ id, texts, policy }) => (
-              <TabPanel key={id}>
+              <TabPanel className="divide-y divide-neutral-800" key={id}>
                 <Textarea
                   className="block w-full resize-none p-2 focus:not-data-focus:outline-none data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-white/25"
                   rows={12}
@@ -192,7 +193,7 @@ function App() {
                     const id = crypto.randomUUID();
                     setData((prev) => [
                       ...prev,
-                      { id, texts: [{ id: crypto.randomUUID(), text: "" }], policy: "", qa: [], answers: {} },
+                      { id, texts: [{ id: crypto.randomUUID(), text: "", label: "original" }], policy: "", qa: [], answers: {} },
                     ]);
                     setCurrentItemId(id);
                   }}>
@@ -314,11 +315,11 @@ function App() {
         <h2 className="text-neutral-500 p-2">Redacted Texts</h2>
         <TabGroup className="text-sm divide-y divide-neutral-800 flex-1 flex flex-col" selectedIndex={selectedRedactedTextIndex - 1}>
           <TabPanels className="flex-1">
-            {currentItem.texts.slice(1).map(({ id, text }) => (
-              <TabPanel key={id}>
+            {currentItem.texts.slice(1).map(({ id, text, label }) => (
+              <TabPanel className="divide-y divide-neutral-800" key={id}>
                 <Textarea
                   className="block w-full resize-none p-2 focus:not-data-focus:outline-none data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-white/25"
-                  rows={16}
+                  rows={15}
                   placeholder="Type original text..."
                   value={text}
                   onChange={(e) => {
@@ -331,6 +332,21 @@ function App() {
                     }));
                   }}
                   required
+                />
+                <Input
+                  className="block w-full resize-none p-2 focus:not-data-focus:outline-none data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-white/25"
+                  rows={1}
+                  placeholder="Type label..."
+                  value={label}
+                  onChange={(e) => {
+                    setData((prev) => prev.map((item) => {
+                      if (item.id !== currentItemId) return item;
+                      return {
+                        ...item,
+                        texts: item.texts.map((t) => t.id === id ? { ...t, label: e.target.value } : t),
+                      };
+                    }));
+                  }}
                 />
               </TabPanel>
             ))}
@@ -365,7 +381,7 @@ function App() {
                       if (item.id !== currentItemId) return item;
                       return {
                         ...item,
-                        texts: [...item.texts, { id, text: "" }],
+                        texts: [...item.texts, { id, text: "", label: "" }],
                       };
                     }));
                     setCurrentRedactedTextId(id);
