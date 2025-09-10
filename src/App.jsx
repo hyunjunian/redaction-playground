@@ -83,7 +83,7 @@ function App() {
     <main className="grid grid-cols-3 gap-px bg-neutral-800 border-b border-neutral-800">
       <header className="bg-black text-sm space-y-2 p-4">
         <h1 className="text-2xl font-medium">Redaction Playground</h1>
-        <p className="text-neutral-500 mb-8 text-sm/6">Test your text redaction skills with this interactive playground.<br /><a className="text-blue-500 hover:underline" href="https://github.com/hyunjunian/redaction-playground" target="_blank">GitHub</a></p>
+        <p className="text-neutral-500 mb-8 text-sm/6">Test your text redaction skills with this interactive playground.<br /><a className="text-blue-500 hover:underline" href="https://github.com/hyunjunian/redaction-playground" target="_blank">GitHub</a><br /><a className="text-blue-500 hover:underline" href="mailto:hyunjunian@gmail.com">hyunjunian@gmail.com</a></p>
         <Button className="rounded-lg focus:not-data-focus:outline-none data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-neutral-500 bg-neutral-900 px-4 py-2 hover:bg-neutral-800 flex items-center space-x-2" onClick={() => {
           const newApiKey = prompt("Please enter your new OpenAI API key:", apiKey);
           if (newApiKey) localStorage.setItem("apiKey", newApiKey);
