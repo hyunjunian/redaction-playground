@@ -38,7 +38,7 @@ async function getResponse({ apiKey, model, input, instruction = "", text, max_o
     const data = await res.json();
     if (!res.ok) return console.error("Failed to generate summary:", data);
     const resText = data.output.at(-1).content.at(-1).text.trim();
-    if (!resText) return console.log("No text returned from the response:", data);
+    if (!resText) return console.error("No text returned from the response:", data);
     return resText;
 }
 

@@ -59,7 +59,6 @@ function getScore(item, redactedTextId, threshold = defaultThreshold) {
     else if (redact && correct) falsePositiveCount += 1;
     else if (redact && !correct) trueNegativeCount += 1;
   });
-  console.log(truePositiveCount, falsePositiveCount, falseNegativeCount, trueNegativeCount);
   const precision = truePositiveCount + falsePositiveCount === 0 ? 1 : truePositiveCount / (truePositiveCount + falsePositiveCount);
   const recall = truePositiveCount + falseNegativeCount === 0 ? 1 : truePositiveCount / (truePositiveCount + falseNegativeCount);
   return precision + recall === 0 ? 0 : (2 * precision * recall) / (precision + recall);
@@ -634,55 +633,55 @@ function App() {
                 disabled
               />
               <div className="flex items-center justify-center w-8 shrink-0">
-                {currentItem.answers[currentItem.texts[0].id]?.[id]?.score === undefined ? (
-                  <Button className="w-8 py-2 flex justify-center items-center text-neutral-500 focus:not-data-focus:outline-none data-focus:outline data-focus:outline-neutral-500 data-focus:text-neutral-200 data-active:text-neutral-200 data-hover:text-neutral-200" onClick={async () => {
-                    const answer = await getAnswer(apiKey, model, currentItem.texts[0].text, currentItem.qa.find(q => q.id === id)?.q || "");
-                    setData((prev) => prev.map((item) => {
-                      if (item.id !== currentItemId) return item;
-                      return {
-                        ...item,
-                        answers: {
-                          ...item.answers,
-                          [currentItem.texts[0].id]: {
-                            ...item.answers[currentItem.texts[0].id],
-                            [id]: {
-                              value: answer,
-                            },
+                <Button className="w-8 py-2 flex justify-center items-center text-neutral-500 focus:not-data-focus:outline-none data-focus:outline data-focus:outline-neutral-500 data-focus:text-neutral-200 data-active:text-neutral-200 data-hover:text-neutral-200" onClick={async () => {
+                  const answer = await getAnswer(apiKey, model, currentItem.texts[0].text, currentItem.qa.find(q => q.id === id)?.q || "");
+                  setData((prev) => prev.map((item) => {
+                    if (item.id !== currentItemId) return item;
+                    return {
+                      ...item,
+                      answers: {
+                        ...item.answers,
+                        [currentItem.texts[0].id]: {
+                          ...item.answers[currentItem.texts[0].id],
+                          [id]: {
+                            value: answer,
                           },
                         },
-                      };
-                    }));
-                    const score = await getEquality(apiKey, model, answer, currentItem.qa.find(q => q.id === id)?.a || "");
-                    setData((prev) => prev.map((item) => {
-                      if (item.id !== currentItemId) return item;
-                      return {
-                        ...item,
-                        answers: {
-                          ...item.answers,
-                          [currentItem.texts[0].id]: {
-                            ...item.answers[currentItem.texts[0].id],
-                            [id]: {
-                              value: answer,
-                              score,
-                            },
+                      },
+                    };
+                  }));
+                  const score = await getEquality(apiKey, model, answer, currentItem.qa.find(q => q.id === id)?.a || "");
+                  setData((prev) => prev.map((item) => {
+                    if (item.id !== currentItemId) return item;
+                    return {
+                      ...item,
+                      answers: {
+                        ...item.answers,
+                        [currentItem.texts[0].id]: {
+                          ...item.answers[currentItem.texts[0].id],
+                          [id]: {
+                            value: answer,
+                            score,
                           },
                         },
-                      };
-                    }));
-                  }}>
+                      },
+                    };
+                  }));
+                }}>
+                  {currentItem.answers[currentItem.texts[0].id]?.[id]?.score === undefined ? (
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
                       <path fillRule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.23-3.723a.75.75 0 0 0 .219-.53V2.929a.75.75 0 0 0-1.5 0V5.36l-.31-.31A7 7 0 0 0 3.239 8.188a.75.75 0 1 0 1.448.389A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h4.243a.75.75 0 0 0 .53-.219Z" clipRule="evenodd" />
                     </svg>
-                  </Button>
-                ) : currentItem.answers[currentItem.texts[0].id]?.[id]?.score >= threshold ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
-                    <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5 text-red-500">
-                    <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-                  </svg>
-                )}
+                  ) : currentItem.answers[currentItem.texts[0].id]?.[id]?.score >= threshold ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5 text-red-500">
+                      <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                    </svg>
+                  )}
+                </Button>
               </div>
             </li>
           ))}
@@ -760,55 +759,55 @@ function App() {
                   disabled
                 />
                 <div className="flex items-center justify-center w-8 shrink-0">
-                  {currentItem.answers[currentItem.texts[selectedRedactedTextIndex].id]?.[id]?.score === undefined ? (
-                    <Button className="w-8 py-2 flex justify-center items-center text-neutral-500 focus:not-data-focus:outline-none data-focus:outline data-focus:outline-neutral-500 data-focus:text-neutral-200 data-active:text-neutral-200 data-hover:text-neutral-200" onClick={async () => {
-                      const answer = await getAnswer(apiKey, model, currentItem.texts[selectedRedactedTextIndex].text, currentItem.qa.find(q => q.id === id)?.q || "");
-                      setData((prev) => prev.map((item) => {
-                        if (item.id !== currentItemId) return item;
-                        return {
-                          ...item,
-                          answers: {
-                            ...item.answers,
-                            [currentItem.texts[selectedRedactedTextIndex].id]: {
-                              ...item.answers[currentItem.texts[selectedRedactedTextIndex].id],
-                              [id]: {
-                                value: answer,
-                              },
+                  <Button className="w-8 py-2 flex justify-center items-center text-neutral-500 focus:not-data-focus:outline-none data-focus:outline data-focus:outline-neutral-500 data-focus:text-neutral-200 data-active:text-neutral-200 data-hover:text-neutral-200" onClick={async () => {
+                    const answer = await getAnswer(apiKey, model, currentItem.texts[selectedRedactedTextIndex].text, currentItem.qa.find(q => q.id === id)?.q || "");
+                    setData((prev) => prev.map((item) => {
+                      if (item.id !== currentItemId) return item;
+                      return {
+                        ...item,
+                        answers: {
+                          ...item.answers,
+                          [currentItem.texts[selectedRedactedTextIndex].id]: {
+                            ...item.answers[currentItem.texts[selectedRedactedTextIndex].id],
+                            [id]: {
+                              value: answer,
                             },
                           },
-                        };
-                      }));
-                      const score = await getEquality(apiKey, model, answer, currentItem.qa.find(q => q.id === id)?.a || "");
-                      setData((prev) => prev.map((item) => {
-                        if (item.id !== currentItemId) return item;
-                        return {
-                          ...item,
-                          answers: {
-                            ...item.answers,
-                            [currentItem.texts[selectedRedactedTextIndex].id]: {
-                              ...item.answers[currentItem.texts[selectedRedactedTextIndex].id],
-                              [id]: {
-                                value: answer,
-                                score,
-                              },
+                        },
+                      };
+                    }));
+                    const score = await getEquality(apiKey, model, answer, currentItem.qa.find(q => q.id === id)?.a || "");
+                    setData((prev) => prev.map((item) => {
+                      if (item.id !== currentItemId) return item;
+                      return {
+                        ...item,
+                        answers: {
+                          ...item.answers,
+                          [currentItem.texts[selectedRedactedTextIndex].id]: {
+                            ...item.answers[currentItem.texts[selectedRedactedTextIndex].id],
+                            [id]: {
+                              value: answer,
+                              score,
                             },
                           },
-                        };
-                      }));
-                    }}>
+                        },
+                      };
+                    }));
+                  }}>
+                    {currentItem.answers[currentItem.texts[selectedRedactedTextIndex].id]?.[id]?.score === undefined ? (
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
                         <path fillRule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.23-3.723a.75.75 0 0 0 .219-.53V2.929a.75.75 0 0 0-1.5 0V5.36l-.31-.31A7 7 0 0 0 3.239 8.188a.75.75 0 1 0 1.448.389A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h4.243a.75.75 0 0 0 .53-.219Z" clipRule="evenodd" />
                       </svg>
-                    </Button>
-                  ) : currentItem.answers[currentItem.texts[selectedRedactedTextIndex].id]?.[id]?.score >= threshold ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
-                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5 text-red-500">
-                      <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-                    </svg>
-                  )}
+                    ) : currentItem.answers[currentItem.texts[selectedRedactedTextIndex].id]?.[id]?.score >= threshold ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
+                        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5 text-red-500">
+                        <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                      </svg>
+                    )}
+                  </Button>
                 </div>
               </li>
             ))}
