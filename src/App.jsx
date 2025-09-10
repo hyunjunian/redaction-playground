@@ -3,7 +3,20 @@ import useLocalStorage from "./useLocalStorage";
 import { useEffect, useState } from "react";
 import { downloadFile, getAnswer, getEquality, getOriginalText, getQA, getRedactedText } from "./utils";
 
-const models = ["gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano", "gpt-5", "gpt-5-mini", "gpt-5-nano"];
+const models = [
+  "gpt-4.1",
+  "gpt-4.1-mini",
+  "gpt-4.1-nano",
+  "gpt-5",
+  "gpt-5-mini",
+  "gpt-5-nano",
+  "gemma-3-1b-it",
+  "gemma-3n-e2b-it",
+  "gemma-3-4b-it",
+  "gemma-3n-e4b-it",
+  "gemma-3-12b-it",
+  "gemma-3-27b-it",
+];
 const defaultData = [{
   id: crypto.randomUUID(),
   qa: [
@@ -84,18 +97,32 @@ function App() {
       <header className="bg-black text-sm space-y-2 p-4">
         <h1 className="text-2xl font-medium">Redaction Playground</h1>
         <p className="text-neutral-500 mb-8 text-sm/6">Test your text redaction skills with this interactive playground.<br /><a className="text-blue-500 hover:underline" href="https://github.com/hyunjunian/redaction-playground" target="_blank">GitHub</a><br /><a className="text-blue-500 hover:underline" href="mailto:hyunjunian@gmail.com">hyunjunian@gmail.com</a></p>
-        <Button className="rounded-lg focus:not-data-focus:outline-none data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-neutral-500 bg-neutral-900 px-4 py-2 hover:bg-neutral-800 flex items-center space-x-2" onClick={() => {
-          const newApiKey = prompt("Please enter your new OpenAI API key:", apiKey);
-          if (newApiKey) localStorage.setItem("apiKey", newApiKey);
-          else if (newApiKey === null) return;
-          else localStorage.removeItem("apiKey");
-          dispatchEvent(new Event("storage"));
-        }}>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
-            <path fillRule="evenodd" d="M8 7a5 5 0 1 1 3.61 4.804l-1.903 1.903A1 1 0 0 1 9 14H8v1a1 1 0 0 1-1 1H6v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-2a1 1 0 0 1 .293-.707L8.196 8.39A5.002 5.002 0 0 1 8 7Zm5-3a.75.75 0 0 0 0 1.5A1.5 1.5 0 0 1 14.5 7 .75.75 0 0 0 16 7a3 3 0 0 0-3-3Z" clipRule="evenodd" />
-          </svg>
-          <span>{apiKey ? "Change" : "Set"} API Key</span>
-        </Button>
+        <div className="flex space-x-2">
+          <Button className="rounded-lg focus:not-data-focus:outline-none data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-neutral-500 bg-neutral-900 px-4 py-2 hover:bg-neutral-800 flex items-center space-x-2" onClick={() => {
+            const newApiKey = prompt("Please enter your new OpenAI API key:", apiKey);
+            if (newApiKey) localStorage.setItem("apiKey", newApiKey);
+            else if (newApiKey === null) return;
+            else localStorage.removeItem("apiKey");
+            dispatchEvent(new Event("storage"));
+          }}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
+              <path fillRule="evenodd" d="M8 7a5 5 0 1 1 3.61 4.804l-1.903 1.903A1 1 0 0 1 9 14H8v1a1 1 0 0 1-1 1H6v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-2a1 1 0 0 1 .293-.707L8.196 8.39A5.002 5.002 0 0 1 8 7Zm5-3a.75.75 0 0 0 0 1.5A1.5 1.5 0 0 1 14.5 7 .75.75 0 0 0 16 7a3 3 0 0 0-3-3Z" clipRule="evenodd" />
+            </svg>
+            <span>OpenAI API Key</span>
+          </Button>
+          {/* <Button className="rounded-lg focus:not-data-focus:outline-none data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-neutral-500 bg-neutral-900 px-4 py-2 hover:bg-neutral-800 flex items-center space-x-2" onClick={() => {
+            const newApiKey = prompt("Please enter your new Gemini API key:", apiKey);
+            if (newApiKey) localStorage.setItem("apiKey", newApiKey);
+            else if (newApiKey === null) return;
+            else localStorage.removeItem("apiKey");
+            dispatchEvent(new Event("storage"));
+          }}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
+              <path fillRule="evenodd" d="M8 7a5 5 0 1 1 3.61 4.804l-1.903 1.903A1 1 0 0 1 9 14H8v1a1 1 0 0 1-1 1H6v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-2a1 1 0 0 1 .293-.707L8.196 8.39A5.002 5.002 0 0 1 8 7Zm5-3a.75.75 0 0 0 0 1.5A1.5 1.5 0 0 1 14.5 7 .75.75 0 0 0 16 7a3 3 0 0 0-3-3Z" clipRule="evenodd" />
+            </svg>
+            <span>Gemini API Key</span>
+          </Button> */}
+        </div>
         <Listbox value={model} onChange={(value) => {
           if (value) localStorage.setItem("model", value);
           else localStorage.removeItem("model");
@@ -319,7 +346,7 @@ function App() {
                 <Textarea
                   className="block w-full resize-none p-2 focus:not-data-focus:outline-none data-focus:outline-2 data-focus:-outline-offset-2 data-focus:outline-white/25"
                   rows={15}
-                  placeholder="Type original text..."
+                  placeholder="Type redacted text..."
                   value={text}
                   onChange={(e) => {
                     setData((prev) => prev.map((item) => {
