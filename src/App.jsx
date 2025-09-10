@@ -209,7 +209,7 @@ function App() {
                     const id = crypto.randomUUID();
                     setData((prev) => [
                       ...prev,
-                      { id, texts: [{ id: crypto.randomUUID(), text: originalText }], policy: "", qa: [], answers: {} },
+                      { id, texts: [{ id: crypto.randomUUID(), text: originalText, label: "original" }], policy: "", qa: [], answers: {} },
                     ]);
                     setCurrentItemId(id);
                   }}>
@@ -404,7 +404,7 @@ function App() {
                         if (item.id !== currentItemId) return item;
                         return {
                           ...item,
-                          texts: [...item.texts, { id, text: redactedText }],
+                          texts: [...item.texts, { id, text: redactedText, label: "" }],
                         };
                       }));
                       setCurrentRedactedTextId(id);
