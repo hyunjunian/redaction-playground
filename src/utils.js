@@ -65,6 +65,7 @@ async function getResponse({ apiKey, model, input, instruction = "", text, max_o
 }
 
 async function getOriginalText(apiKey, model) {
+    model = "gpt-4.1";  // Force to use gpt-4.1
     const res = await getResponse({
         apiKey,
         model,
@@ -95,6 +96,7 @@ async function getOriginalText(apiKey, model) {
 }
 
 async function getQA(apiKey, model, context) {
+    model = "gpt-4.1";  // Force to use gpt-4.1
     const res = await getResponse({
         apiKey,
         model,
@@ -150,6 +152,7 @@ Now, please start working with the text below.`,
 }
 
 async function getEquality(apiKey, model, value, answer) {
+    model = "gpt-4.1";  // Force to use gpt-4.1
     if (value.replaceAll(" ", "").replace(/\.+$/, "").toLowerCase() === answer.replaceAll(" ", "").replace(/\.+$/, "").toLowerCase()) return 1;
     const res = await getResponse({
         apiKey, model, input: `Do "${value}" and "${answer}" have the same meaning? score from 0 to 1. 0 means no, 1 means yes.`, text: {
@@ -178,6 +181,7 @@ async function getEquality(apiKey, model, value, answer) {
 }
 
 async function getAnswer(apiKey, model, context, question) {
+    model = "gpt-4.1";  // Force to use gpt-4.1
     const res = await getResponse({
         apiKey,
         model,
