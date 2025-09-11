@@ -57,6 +57,37 @@ One CID official, who like some others spoke on the condition of anonymity citin
 }]
 const defaultThreshold = 0.8;
 
+function getScoreByLabels(data, threshold = defaultThreshold) {
+  const scores = {};
+  data.forEach((item) => {
+    item.texts.forEach((text) => {
+      if (!text.label) return;
+      if (!scores[text.label]) scores[text.label] = { falsePositiveCount: 0, falseNegativeCount: 0, truePositiveCount: 0, trueNegativeCount: 0 };
+      const score = getScore(item, text.id, threshold);
+      scores[text.label].falsePositiveCount += score.falsePositiveCount;
+      scores[text.label].falseNegativeCount += score.falseNegativeCount;
+      scores[text.label].truePositiveCount += score.truePositiveCount;
+      scores[text.label].trueNegativeCount += score.trueNegativeCount;
+    });
+  });
+  Object.keys(scores).forEach((label) => {
+    const { falsePositiveCount, falseNegativeCount, truePositiveCount, trueNegativeCount } = scores[label];
+    const precision = truePositiveCount + falsePositiveCount === 0 ? 1 : truePositiveCount / (truePositiveCount + falsePositiveCount);
+    const recall = truePositiveCount + falseNegativeCount === 0 ? 1 : truePositiveCount / (truePositiveCount + falseNegativeCount);
+    scores[label] = {
+      falsePositiveCount,
+      falseNegativeCount,
+      truePositiveCount,
+      trueNegativeCount,
+      // accuracy: (truePositiveCount + trueNegativeCount) / item.qa.length,
+      precision,
+      recall,
+      f1: precision + recall === 0 ? 0 : (2 * precision * recall) / (precision + recall)
+    };
+  });
+  return scores;
+}
+
 function getScore(item, redactedTextId, threshold = defaultThreshold) {
   let falsePositiveCount = 0;
   let falseNegativeCount = 0;
@@ -74,7 +105,16 @@ function getScore(item, redactedTextId, threshold = defaultThreshold) {
   });
   const precision = truePositiveCount + falsePositiveCount === 0 ? 1 : truePositiveCount / (truePositiveCount + falsePositiveCount);
   const recall = truePositiveCount + falseNegativeCount === 0 ? 1 : truePositiveCount / (truePositiveCount + falseNegativeCount);
-  return precision + recall === 0 ? 0 : (2 * precision * recall) / (precision + recall);
+  return {
+    falsePositiveCount,
+    falseNegativeCount,
+    truePositiveCount,
+    trueNegativeCount,
+    accuracy: (truePositiveCount + trueNegativeCount) / item.qa.length,
+    precision,
+    recall,
+    f1: precision + recall === 0 ? 0 : (2 * precision * recall) / (precision + recall)
+  };
 }
 
 function App() {
@@ -759,9 +799,9 @@ function App() {
       </div>
       <div className="bg-black divide-y divide-neutral-800">
         <div className="text-neutral-500 flex divide-x divide-neutral-800">
-          <p className="p-2 flex-1">Answer (Score: {getScore(currentItem, currentRedactedTextId, threshold).toFixed(2)})</p>
+          <p className="p-2 flex-1">Answer (Score: {getScore(currentItem, currentRedactedTextId, threshold).f1.toFixed(2)})</p>
           <Popover className="flex items-center justify-center w-8 shrink-0">
-            <PopoverButton className="outline-none hover:text-neutral-200">
+            <PopoverButton className="outline-none hover:text-neutral-200" onClick={() => console.log(Object.entries(getScoreByLabels(data, threshold)).map(([label, score]) => `${label} ${score.precision.toFixed(2)} ${score.recall.toFixed(2)} ${score.f1.toFixed(2)}`).join("\n"))}>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-5">
                 <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
               </svg>
